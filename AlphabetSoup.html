@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sopa de Letras</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet"
+  integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+
+
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+    td {
+      border: 1px solid black;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .highlighted {
+      background-color: yellow;
+    }
+
+    
+button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #45a049;
+  cursor: pointer;
+}
+
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Sopa de Letras</h1>
+  <label for="palabras">Ingrese las palabras separadas por comas: <span style="color: red;">(sin espacios en blanco)</span> </label>
+  <br>
+  <textarea id="palabras" style="width: 100%;" class="form-control">viento,arena,cielo,rosa,nube,roca,puente,río,luz,hoja,espejo,canto,lluvia,alma,fuego</textarea>
+  
+  
+  <br>
+
+  
+
+
+
+  <button onclick="generarSopa()">Generar Sopa de Letras</button>
+  <button onclick="resaltarPalabras()">Resaltar la respuesta</button>
+  <br><br>
+  <table id="sopa"></table>
+
+</div>  
+
+
+
+  <script>
+    // Función para generar la sopa de letras
+    function generarSopa() {
+      // Obtener las palabras ingresadas y convertirlas a mayúsculas
+      const palabras = document.getElementById("palabras").value.toUpperCase().split(",");
+      // Obtener la longitud máxima de las palabras
+      const maxLongitud = Math.max(...palabras.map(palabra => palabra.length));
+      // Inicializar el tamaño de la matriz con la longitud máxima
+      let tamano = maxLongitud;
+      const sopa = document.getElementById("sopa");
+      sopa.innerHTML = "";
+
+      // Crear la matriz de letras y rellenarla con "-"
+      const letras = [];
+      for (let i = 0; i < tamano; i++) {
+        letras[i] = [];
+        for (let j = 0; j < tamano; j++) {
+          letras[i][j] = "-";
+        }
+      }
+
+      // Definir las direcciones posibles para colocar las palabras
+      const direcciones = [
+        [0, 1], [1, 0], [1, 1] // Arriba-abajo, izquierda-derecha, diagonal izquierda-arriba a derecha-abajo
+      ];
+
+      // Colocar cada palabra en la matriz
+      for (const palabra of palabras) {
+        let colocada = false;
+        while (!colocada) {
+          const direccion = direcciones[Math.floor(Math.random() * direcciones.length)];
+          const fila = Math.floor(Math.random() * tamano);
+          const col = Math.floor(Math.random() * tamano);
+
+          let puedeColocar = true;
+          for (let i = 0; i < palabra.length; i++) {
+            const nuevaFila = fila + i * direccion[0];
+            const nuevaCol = col + i * direccion[1];
+            if (nuevaFila < 0 || nuevaFila >= tamano || nuevaCol < 0 || nuevaCol >= tamano || letras[nuevaFila][nuevaCol] !== "-") {
+              puedeColocar = false;
+              break;
+            }
+          }
+
+          if (puedeColocar) {
+            for (let i = 0; i < palabra.length; i++) {
+              const nuevaFila = fila + i * direccion[0];
+              const nuevaCol = col + i * direccion[1];
+              letras[nuevaFila][nuevaCol] = palabra[i];
+            }
+            colocada = true;
+          } else {
+            // Si no se puede colocar la palabra, aumentar el tamaño de la matriz
+            tamano++;
+            for (let i = 0; i < tamano; i++) {
+              if (!letras[i]) {
+                letras[i] = [];
+              }
+              for (let j = letras[i].length; j < tamano; j++) {
+                letras[i][j] = "-";
+              }
+            }
+          }
+        }
+      }
+
+      // Crear la tabla HTML con las letras
+      for (let i = 0; i < tamano; i++) {
+        const fila = sopa.insertRow();
+        for (let j = 0; j < tamano; j++) {
+          const celda = fila.insertCell();
+          if (letras[i][j] === "-") {
+            celda.textContent = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Letra aleatoria
+          } else {
+            celda.textContent = letras[i][j];
+          }
+        }
+      }
+    }
+
+    // Función para resaltar las palabras encontradas
+    function resaltarPalabras() {
+      const palabras = document.getElementById("palabras").value.toUpperCase().split(",");
+      const maxLongitud = Math.max(...palabras.map(palabra => palabra.length));
+      const tamano = document.getElementById("sopa").rows.length; // Obtener el tamaño real de la matriz
+      const sopa = document.getElementById("sopa");
+      const celdas = sopa.getElementsByTagName("td");
+
+      // Remover el resaltado previo
+      for (let i = 0; i < celdas.length; i++) {
+        celdas[i].classList.remove("highlighted");
+      }
+
+      // Crear una copia de la matriz con las letras actuales
+      const letras = [];
+      for (let i = 0; i < tamano; i++) {
+        letras[i] = [];
+        for (let j = 0; j < tamano; j++) {
+          letras[i][j] = celdas[i * tamano + j].textContent;
+        }
+      }
+
+      // Definir las direcciones posibles para buscar las palabras
+      const direcciones = [
+        [0, 1], [1, 0], [1, 1] // Arriba-abajo, izquierda-derecha, diagonal izquierda-arriba a derecha-abajo
+      ];
+
+      // Buscar y resaltar cada palabra
+      for (const palabra of palabras) {
+        for (let fila = 0; fila < tamano; fila++) {
+          for (let col = 0; col < tamano; col++) {
+            for (const direccion of direcciones) {
+              let encontrada = true;
+              for (let i = 0; i < palabra.length; i++) {
+                const nuevaFila = fila + i * direccion[0];
+                const nuevaCol = col + i * direccion[1];
+                if (nuevaFila < 0 || nuevaFila >= tamano || nuevaCol < 0 || nuevaCol >= tamano || letras[nuevaFila][nuevaCol] !== palabra[i]) {
+                  encontrada = false;
+                  break;
+                }
+              }
+              if (encontrada) {
+                for (let i = 0; i < palabra.length; i++) {
+                  const nuevaFila = fila + i * direccion[0];
+                  const nuevaCol = col + i * direccion[1];
+                  const celda = celdas[nuevaFila * tamano + nuevaCol];
+                  celda.classList.add("highlighted");
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
